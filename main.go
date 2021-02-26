@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	AdminRoutes "main/admin/routes"
+	"main/auth/middleware"
 	AuthRoutes "main/auth/routers"
 	"main/models"
 	MainRoutes "main/routes"
@@ -27,13 +28,13 @@ func main() {
 	//})
 	// Подключение к базе данных
 	models.ConnectDB()
-
+	authMiddleware := middleware.AuthMiddleware()
 	// Маршруты для Auth
-	AuthRoutes.Urls(router)
+	AuthRoutes.Urls(router, authMiddleware)
 	// Маршруты для main
-	MainRoutes.Urls(router)
+	MainRoutes.Urls(router, authMiddleware)
 	// Маршруты для Admin
-	AdminRoutes.Urls(router)
+	AdminRoutes.Urls(router, authMiddleware)
 
 	// Статика
 	router.Static("/assets", "./assets")
