@@ -1,29 +1,39 @@
+<!doctype html>
+
 <html>
 <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <!-- Custom styles for this template -->
-    <link rel="stylesheet" href="css/template.css" >
-    <title>Вход</title>
+	<title>{{.title}}</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+	<link href="/assets/css/login.css" rel="stylesheet" >
 </head>
 <body>
-<form name="authForm" action="/login" method="POST" class="form-signin" >
-    <img class="mb-4" src="img/logo.png" alt="" width="72" height="72">
-    <h1 class="h3 mb-3 font-weight-normal">Пожалуйста, войдите в систему</h1>
-    <label for="authLogin" class="sr-only">Логин</label>
-    <input type="text" name="username" class="form-control" placeholder="Логин" required autofocus>
-    <label for="authPass" class="sr-only">Пароль</label>
-    <input type="password" name="password" class="form-control" placeholder="Пароль" required>
-    <div class="checkbox mb-3">
-        <label>
-            <input type="checkbox" value="remember-me"> Запомнить меня
-        </label>
-    </div>
-    <button class="btn btn-lg btn-primary btn-block" id="submit" type="submit">Вход</button>
-</form>
+<div class="container">
+	<div class="row">
+		<div class="col-md-offset-3 col-md-6">
+			<form name="authForm" action="/auth/login" method="POST" class="form-horizontal">
+				<span class="heading">АВТОРИЗАЦИЯ</span>
+				<div class="form-group">
+					<input type="text" name="username" class="form-control" placeholder="Login">
+					<i class="fa fa-user"></i>
+				</div>
+				<div class="form-group help">
+					<input type="password" name="password" class="form-control" placeholder="Password">
+					<i class="fa fa-lock"></i>
+<!--					<a href="#" class="fa fa-question-circle"></a>-->
+				</div>
+				<div class="form-group">
+					<div class="main-checkbox">
+						<input type="checkbox" value="none" id="checkbox1" name="check"/>
+						<label for="checkbox1"></label>
+					</div>
+					<span class="text">Запомнить</span>
+					<button type="submit" class="btn btn-default">ВХОД</button>
+				</div>
+			</form>
+			{{include "layouts/footer"}}
+		</div>
+	</div>
+</div>
 </body>
 </html>
