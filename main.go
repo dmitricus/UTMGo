@@ -8,6 +8,7 @@ import (
 	AdminRoutes "main/admin/routes"
 	"main/auth/middleware"
 	AuthRoutes "main/auth/routers"
+	MainControllers "main/controllers"
 	"main/models"
 	MainRoutes "main/routes"
 )
@@ -19,6 +20,7 @@ func main() {
 	}); err != nil {
 		fmt.Printf("Sentry initialization failed: %v\n", err)
 	}
+	MainControllers.SendEmail("test@example.com", "20100", "password.msg")
 
 	gin.SetMode(gin.DebugMode)
 	router := gin.Default()
@@ -43,6 +45,6 @@ func main() {
 	router.StaticFile("/favicon.ico", "./assets/img/favicon.ico")
 
 	// Запуск сервера
-	port := "8081"
+	port := "8082"
 	router.Run(":" + port)
 }

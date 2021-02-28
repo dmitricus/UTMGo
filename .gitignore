@@ -7,3 +7,4 @@ vendor/
 debug
 bolt.db
 main
+.env

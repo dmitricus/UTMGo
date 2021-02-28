@@ -1,10 +1,10 @@
-package mailer
+package main
 
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"fmt"
+	"github.com/joho/godotenv"
 	"log"
 	"net"
 	"net/smtp"
@@ -52,6 +52,10 @@ var queue chan Message     //... queue for the messages received from RPC
 //then reading templates
 //then creating queue channel
 func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	cnf = conf{
 		os.Getenv("MAILER_REMOTE_HOST"),
 		os.Getenv("MAILER_USER"),
@@ -140,17 +144,20 @@ func main() {
 //Function to get active tls connection and smtp client
 func getSMTPClient() *smtp.Client {
 	var err error
-	host, _, _ := net.SplitHostPort(cnf.smtphost)
+	//host, _, _ := net.SplitHostPort(cnf.smtphost)
 
-	tlsconfig := &tls.Config{
-		InsecureSkipVerify: true,
-		ServerName:         host,
-	}
-
-	conn, err := tls.Dial("tcp", cnf.smtphost, tlsconfig)
+	//tlsconfig := &tls.Config{
+	//	InsecureSkipVerify: true,
+	//	ServerName:         host,
+	//}
+	conn, err := net.Dial("tcp", cnf.smtphost)
 	if err != nil {
-		log.Println("tls.dial", err)
+		log.Println("net.dial", err)
 	}
+	//conn, err := tls.Dial("tcp", cnf.smtphost, tlsconfig)
+	//if err != nil {
+	//	log.Println("tls.dial", err)
+	//}
 
 	client, err := smtp.NewClient(conn, cnf.smtphost)
 	if err != nil {

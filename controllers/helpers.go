@@ -24,7 +24,7 @@ func init() {
 	}
 	jwtsecret = []byte(secr)
 
-	maileraddress = os.Getenv("API_MAILER_LISTENING_AT")
+	maileraddress = "127.0.0.1:20100"
 	if maileraddress == "" {
 		//logger.MailerEnvNotSet.Fatal()
 		//panic(logger.MailerEnvNotSet)
@@ -71,7 +71,7 @@ func init() {
 //	return string(b)
 //}
 
-func sendEmail(eml, code, tpl string) error {
+func SendEmail(eml, code, tpl string) error {
 	conn, err := grpc.Dial(maileraddress, grpc.WithInsecure())
 	if err != nil {
 		return err
