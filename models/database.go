@@ -1,13 +1,14 @@
 package models
 
 import (
+	AuthModels "main/auth/models"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	models2 "main/auth/models"
 )
 
 var DB *gorm.DB
-var User *models2.User
+var User *AuthModels.User
 
 func ConnectDB() {
 	db, err := gorm.Open(

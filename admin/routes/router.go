@@ -25,16 +25,16 @@ func Urls(router *gin.Engine, authMiddleware *jwt.GinJWTMiddleware) {
 		},
 		DisableCache: true,
 	})
-	admin := router.Group("/admin")
-	admin.GET("/login", func(ctx *gin.Context) {
+	adminRouter := router.Group("/admin")
+	adminRouter.GET("/login", func(ctx *gin.Context) {
 		ctx.HTML(http.StatusOK, "login.html", gin.H{
 			"title": "Авторизация",
 		})
 	})
 
-	admin.Use(authMiddleware.MiddlewareFunc())
+	adminRouter.Use(authMiddleware.MiddlewareFunc())
 	{
-		admin.GET("/", func(ctx *gin.Context) {
+		adminRouter.GET("/", func(ctx *gin.Context) {
 			//render with master
 			ctx.HTML(http.StatusOK, "index", gin.H{
 				"title": "Index title!",
@@ -43,7 +43,7 @@ func Urls(router *gin.Engine, authMiddleware *jwt.GinJWTMiddleware) {
 				},
 			})
 		})
-		admin.GET("/page", func(ctx *gin.Context) {
+		adminRouter.GET("/page", func(ctx *gin.Context) {
 			ctx.HTML(http.StatusOK, "page", gin.H{
 				"title": "Page file title!!",
 			})

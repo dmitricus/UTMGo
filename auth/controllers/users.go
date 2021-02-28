@@ -21,6 +21,17 @@ type CreateUserInput struct {
 
 // POST /users
 // Создание user
+//http://127.0.0.1:8081/auth/create_user/
+//{
+//	"username":     "root",
+//	"password":     "root",
+//	"email":        "admin@admin.local",
+//	"first_name":    "Бородулин",
+//	"last_name":     "Дмитирий",
+//	"is_superusers": true,
+//	"is_staff":      true,
+//	"is_active":     true
+//}
 func CreateUser(context *gin.Context) {
 	var input CreateUserInput
 	if err := context.ShouldBindJSON(&input); err != nil {

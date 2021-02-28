@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 	AdminRoutes "main/admin/routes"
 	"main/auth/middleware"
@@ -10,22 +13,20 @@ import (
 )
 
 func main() {
+	// To initialize Sentry's handler, you need to initialize Sentry itself beforehand
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn: "https://5310fd7683b54198a2b769f58cbf8042@o465522.ingest.sentry.io/5478277",
+	}); err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
+	}
+
+	gin.SetMode(gin.DebugMode)
 	router := gin.Default()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
-	//store := cookie.NewStore([]byte("secret"))
-	//router.Use(sessions.Sessions("mysession", store))
 
-	//router.GET("/hello", func(c *gin.Context) {
-	//	session := sessions.Default(c)
-	//
-	//	if session.Get("hello") != "world" {
-	//		session.Set("hello", "world")
-	//		session.Save()
-	//	}
-	//
-	//	c.JSON(200, gin.H{"hello": session.Get("hello")})
-	//})
+	router.Use(sentrygin.New(sentrygin.Options{}))
+
 	// Подключение к базе данных
 	models.ConnectDB()
 	authMiddleware := middleware.AuthMiddleware()
