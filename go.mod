@@ -4,14 +4,12 @@ go 1.16
 
 require (
 	github.com/appleboy/gin-jwt/v2 v2.6.4
-	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054 // indirect
 	github.com/foolin/gin-template v0.0.0-20190415034731-41efedfb393b
-	github.com/getsentry/raven-go v0.2.0
 	github.com/getsentry/sentry-go v0.10.0
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
 	github.com/golang/protobuf v1.4.3
-	github.com/joho/godotenv v1.3.0 // indirect
+	github.com/joho/godotenv v1.3.0
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/ugorji/go v1.2.4 // indirect
