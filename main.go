@@ -11,6 +11,7 @@ import (
 	MainControllers "main/controllers"
 	"main/models"
 	MainRoutes "main/routes"
+	"net/http"
 )
 
 func main() {
@@ -20,7 +21,6 @@ func main() {
 	}); err != nil {
 		fmt.Printf("Sentry initialization failed: %v\n", err)
 	}
-	MainControllers.SendEmail("test@example.com", "20100", "password.msg")
 
 	gin.SetMode(gin.DebugMode)
 	router := gin.Default()
@@ -44,7 +44,12 @@ func main() {
 	//route.StaticFS("/more_static", http.Dir("my_file_system"))
 	router.StaticFile("/favicon.ico", "./assets/img/favicon.ico")
 
+	router.GET("/send", func(context *gin.Context) {
+		MainControllers.SendEmail("user1@example.com", "20100", "password.msg")
+		context.JSON(http.StatusOK, gin.H{"user1@example.com": "OK"})
+	})
+
 	// Запуск сервера
-	port := "8082"
+	port := "8081"
 	router.Run(":" + port)
 }

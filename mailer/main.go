@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"github.com/joho/godotenv"
 	"log"
@@ -144,20 +145,17 @@ func main() {
 //Function to get active tls connection and smtp client
 func getSMTPClient() *smtp.Client {
 	var err error
-	//host, _, _ := net.SplitHostPort(cnf.smtphost)
+	host, _, _ := net.SplitHostPort(cnf.smtphost)
 
-	//tlsconfig := &tls.Config{
-	//	InsecureSkipVerify: true,
-	//	ServerName:         host,
-	//}
-	conn, err := net.Dial("tcp", cnf.smtphost)
-	if err != nil {
-		log.Println("net.dial", err)
+	tlsconfig := &tls.Config{
+		InsecureSkipVerify: true,
+		ServerName:         host,
 	}
-	//conn, err := tls.Dial("tcp", cnf.smtphost, tlsconfig)
-	//if err != nil {
-	//	log.Println("tls.dial", err)
-	//}
+
+	conn, err := tls.Dial("tcp", cnf.smtphost, tlsconfig)
+	if err != nil {
+		log.Println("tls.dial", err)
+	}
 
 	client, err := smtp.NewClient(conn, cnf.smtphost)
 	if err != nil {
