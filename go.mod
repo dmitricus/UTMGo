@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/appleboy/gin-jwt/v2 v2.6.4
+	github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21 // indirect
 	github.com/foolin/gin-template v0.0.0-20190415034731-41efedfb393b
 	github.com/getsentry/sentry-go v0.10.0
 	github.com/gin-gonic/gin v1.6.3
