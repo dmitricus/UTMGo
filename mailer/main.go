@@ -143,7 +143,7 @@ func main() {
 }
 
 //Function to get active tls connection and smtp client
-func getSMTPClient() *smtp.Client {
+func getSMTPClient() (*smtp.Client, smtp.Auth) {
 	var err error
 	host, _, _ := net.SplitHostPort(cnf.smtphost)
 
@@ -168,12 +168,12 @@ func getSMTPClient() *smtp.Client {
 		log.Println("auth", err)
 	}
 
-	return client
+	return client, auth
 }
 
 //Main loop to send a batch of emails due to one smtp session
 func messageLoop() {
-	client := getSMTPClient()
+	client, auth := getSMTPClient()
 	defer client.Quit()
 
 	for m := range queue {
@@ -181,32 +181,17 @@ func messageLoop() {
 		err := client.Noop()
 		if err != nil {
 			log.Println("reestablish connection", err)
-			client = getSMTPClient()
 		}
-
-		if err = client.Mail(cnf.user); err != nil {
-			log.Println(err)
-		}
-
-		if err = client.Rcpt(m.To); err != nil {
-			log.Println(err)
-		}
-
-		writecloser, err := client.Data()
+		to := []string{m.To}
+		err = smtp.SendMail(
+			cnf.smtphost,
+			auth,
+			m.From,
+			to,
+			m.getMailBody(),
+		)
 		if err != nil {
-			log.Println(err)
+			log.Fatal(err)
 		}
-
-		_, err = writecloser.Write(m.getMailBody())
-		if err != nil {
-			log.Println(err)
-		}
-
-		err = writecloser.Close()
-		if err != nil {
-			log.Println(err)
-		}
-
 	}
-
 }
