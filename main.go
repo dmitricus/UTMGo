@@ -6,6 +6,7 @@ import (
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 	AdminRoutes "main/admin/routes"
+	ApiRoutes "main/api/routers"
 	"main/auth/middleware"
 	AuthRoutes "main/auth/routers"
 	MainControllers "main/controllers"
@@ -38,6 +39,8 @@ func main() {
 	MainRoutes.Urls(router, authMiddleware)
 	// Маршруты для Admin
 	AdminRoutes.Urls(router, authMiddleware)
+	// Маршруты для Api
+	ApiRoutes.Urls(router, authMiddleware)
 
 	// Статика
 	router.Static("/assets", "./assets")
