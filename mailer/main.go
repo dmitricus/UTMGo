@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"github.com/joho/godotenv"
 	"log"
@@ -142,33 +143,58 @@ func main() {
 
 }
 
+type loginAuth struct {
+	username, password string
+}
+
+func LoginAuth(username, password string) smtp.Auth {
+	return &loginAuth{username, password}
+}
+
+func (a *loginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	return "LOGIN", []byte(a.username), nil
+}
+
+func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	if more {
+		switch string(fromServer) {
+		case "Username:":
+			return []byte(a.username), nil
+		case "Password:":
+			return []byte(a.password), nil
+		default:
+			return nil, errors.New("Unknown from server")
+		}
+	}
+	return nil, nil
+}
+
 //Function to get active tls connection and smtp client
 func getSMTPClient() (*smtp.Client, smtp.Auth) {
 	var err error
 	host, _, _ := net.SplitHostPort(cnf.smtphost)
 
 	tlsconfig := &tls.Config{
-		InsecureSkipVerify: true,
-		ServerName:         host,
+		//InsecureSkipVerify: true,
+		ServerName: host,
 	}
-
-	conn, err := tls.Dial("tcp", cnf.smtphost, tlsconfig)
+	conn, err := net.Dial("tcp", cnf.smtphost)
 	if err != nil {
-		log.Println("tls.dial", err)
+		log.Println("ERROR:", err)
 	}
 
-	client, err := smtp.NewClient(conn, cnf.smtphost)
+	c, err := smtp.NewClient(conn, host)
 	if err != nil {
-		log.Println("new client", err)
+		log.Println("ERROR:", err)
 	}
 
-	auth := smtp.PlainAuth("", cnf.user, cnf.pass, cnf.smtphost)
-
-	if err = client.Auth(auth); err != nil {
-		log.Println("auth", err)
+	if err = c.StartTLS(tlsconfig); err != nil {
+		log.Println("ERROR:", err)
 	}
 
-	return client, auth
+	auth := LoginAuth(cnf.user, cnf.pass)
+
+	return c, auth
 }
 
 //Main loop to send a batch of emails due to one smtp session
@@ -180,7 +206,7 @@ func messageLoop() {
 
 		err := client.Noop()
 		if err != nil {
-			log.Println("reestablish connection", err)
+			log.Println("ERROR: reestablish connection", err)
 		}
 		to := []string{m.To}
 		err = smtp.SendMail(
@@ -191,7 +217,7 @@ func messageLoop() {
 			m.getMailBody(),
 		)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("ERROR:", err)
 		}
 	}
 }
