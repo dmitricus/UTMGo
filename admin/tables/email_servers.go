@@ -41,7 +41,7 @@ func GetEmailServersTable(ctx *context.Context) (emailServersTable table.Table) 
 	info.AddField("ApiFromName", "api_from_name", db.Varchar)
 	info.AddField("SendingMethod", "sending_method", db.Varchar)
 	info.AddField("IsActive", "is_active", db.Boolean)
-	//info.AddField("PreferredDomains", "preferred_domains", db.Varchar)
+	info.AddField("PreferredDomains", "preferred_domains", db.Int)
 
 	info.SetTable("email_servers").SetTitle("EmailServers").SetDescription("EmailServers")
 
@@ -63,7 +63,7 @@ func GetEmailServersTable(ctx *context.Context) (emailServersTable table.Table) 
 	formList.AddField("ApiFromName", "api_from_name", db.Varchar, form.Text)
 	formList.AddField("SendingMethod", "sending_method", db.Varchar, form.Text)
 	formList.AddField("IsActive", "is_active", db.Boolean, form.Checkbox)
-	//formList.AddField("PreferredDomains", "preferred_domains", db.Varchar, form.Checkbox)
+	formList.AddField("PreferredDomains", "preferred_domains", db.Int, form.Select)
 
 	formList.SetTable("email_servers").SetTitle("EmailServers").SetDescription("EmailServers")
 
