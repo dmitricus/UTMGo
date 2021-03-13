@@ -2,6 +2,7 @@
 keys/
 env/
 vendor/
+logs/
 .vscode/
 .idea/
 debug
