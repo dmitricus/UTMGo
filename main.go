@@ -37,8 +37,9 @@ func startServer() {
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = ioutil.Discard
 	r := gin.Default()
+	eng := engine.Default()
 
-	// To initialize Sentry's handler, you need to initialize Sentry itself beforehand
+	// Настройки Сентри
 	if err := sentry.Init(sentry.ClientOptions{
 		Dsn: "https://5310fd7683b54198a2b769f58cbf8042@o465522.ingest.sentry.io/5478277",
 	}); err != nil {
@@ -48,8 +49,7 @@ func startServer() {
 
 	template.AddComp(chartjs.NewChart())
 
-	eng := engine.Default()
-
+	// Конфиг
 	if err := eng.AddConfigFromJSON("./config.json").
 		AddGenerators(tables.Generators).
 		Use(r); err != nil {

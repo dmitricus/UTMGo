@@ -14,7 +14,7 @@ func Urls(router *gin.Engine, engine *engine.Engine, authMiddleware *jwt.GinJWTM
 	//		"title": "Авторизация",
 	//	})
 	//})
-	engine.HTML("GET", "/", pages.GetDashBoard)
+	engine.HTML("GET", "/admin", pages.GetDashBoard)
 	engine.HTMLFile("GET", "/admin/hello", ".admin/html/hello.tmpl", map[string]interface{}{
 		"msg": "Hello world",
 	})
