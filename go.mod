@@ -3,6 +3,7 @@ module main
 go 1.16
 
 require (
+	github.com/GoAdminGroup/go-admin v1.2.22 // indirect
 	github.com/appleboy/gin-jwt/v2 v2.6.4
 	github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21 // indirect
 	github.com/foolin/gin-template v0.0.0-20190415034731-41efedfb393b
