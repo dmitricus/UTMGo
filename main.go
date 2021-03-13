@@ -18,9 +18,15 @@ import (
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 
+	"main/auth/middleware"
+
 	"main/admin/models"
-	"main/admin/pages"
+
 	"main/admin/tables"
+
+	AdminRoutes "main/admin/routes"
+	ApiRoutes "main/api/routers"
+	AuthRoutes "main/auth/routers"
 )
 
 func main() {
@@ -28,18 +34,16 @@ func main() {
 }
 
 func startServer() {
+	gin.SetMode(gin.ReleaseMode)
+	gin.DefaultWriter = ioutil.Discard
+	r := gin.Default()
+
 	// To initialize Sentry's handler, you need to initialize Sentry itself beforehand
 	if err := sentry.Init(sentry.ClientOptions{
 		Dsn: "https://5310fd7683b54198a2b769f58cbf8042@o465522.ingest.sentry.io/5478277",
 	}); err != nil {
 		fmt.Printf("Sentry initialization failed: %v\n", err)
 	}
-
-	gin.SetMode(gin.ReleaseMode)
-	gin.DefaultWriter = ioutil.Discard
-
-	r := gin.Default()
-
 	r.Use(sentrygin.New(sentrygin.Options{}))
 
 	template.AddComp(chartjs.NewChart())
@@ -54,14 +58,17 @@ func startServer() {
 
 	r.Static("/uploads", "./uploads")
 
-	eng.HTML("GET", "/admin", pages.GetDashBoard)
-	eng.HTMLFile("GET", "/admin/hello", ".admin/html/hello.tmpl", map[string]interface{}{
-		"msg": "Hello world",
-	})
+	authMiddleware := middleware.AuthMiddleware()
+	// Маршруты для Auth
+	AuthRoutes.Urls(r, authMiddleware)
+	// Маршруты для Admin
+	AdminRoutes.Urls(r, eng, authMiddleware)
+	// Маршруты для Api
+	ApiRoutes.Urls(r, authMiddleware)
 
 	models.Init(eng.PostgresqlConnection())
 
-	_ = r.Run(":80")
+	_ = r.Run(":8080")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
