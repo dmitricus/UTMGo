@@ -2,7 +2,6 @@
 package tables
 
 import (
-	"github.com/GoAdminGroup/go-admin/examples/datamodel"
 	"github.com/GoAdminGroup/go-admin/plugins/admin/modules/table"
 )
 
@@ -18,6 +17,5 @@ import (
 // example end
 //
 var Generators = map[string]table.Generator{
-	"superuser": datamodel.GetGoadminSuperUsersTable,
-	"user":      datamodel.GetUserTable,
+	"email_server": GetEmailServersTable,
 }

@@ -3,6 +3,7 @@ package models
 import (
 	"github.com/GoAdminGroup/go-admin/modules/db"
 	"github.com/jinzhu/gorm"
+	"main/mailer/models"
 )
 
 var (
@@ -16,4 +17,7 @@ func Init(c db.Connection) {
 	if err != nil {
 		panic("initialize orm failed")
 	}
+	orm.AutoMigrate(
+		&models.EmailServers{},
+	)
 }
