@@ -2,20 +2,32 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"os/signal"
+
+	_ "github.com/GoAdminGroup/go-admin/adapter/gin"                 // web framework adapter
+	_ "github.com/GoAdminGroup/go-admin/modules/db/drivers/postgres" // sql driver
+	_ "github.com/GoAdminGroup/themes/adminlte"                      // ui theme
+
+	"github.com/GoAdminGroup/go-admin/engine"
+	"github.com/GoAdminGroup/go-admin/template"
+	"github.com/GoAdminGroup/go-admin/template/chartjs"
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
-	AdminRoutes "main/admin/routes"
-	ApiRoutes "main/api/routers"
-	"main/auth/middleware"
-	AuthRoutes "main/auth/routers"
-	MainControllers "main/controllers"
-	"main/models"
-	MainRoutes "main/routes"
-	"net/http"
+
+	"main/admin/models"
+	"main/admin/pages"
+	"main/admin/tables"
 )
 
 func main() {
+	startServer()
+}
+
+func startServer() {
 	// To initialize Sentry's handler, you need to initialize Sentry itself beforehand
 	if err := sentry.Init(sentry.ClientOptions{
 		Dsn: "https://5310fd7683b54198a2b769f58cbf8042@o465522.ingest.sentry.io/5478277",
@@ -23,36 +35,37 @@ func main() {
 		fmt.Printf("Sentry initialization failed: %v\n", err)
 	}
 
-	gin.SetMode(gin.DebugMode)
-	router := gin.Default()
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
+	gin.SetMode(gin.ReleaseMode)
+	gin.DefaultWriter = ioutil.Discard
 
-	router.Use(sentrygin.New(sentrygin.Options{}))
+	r := gin.Default()
 
-	// Подключение к базе данных
-	models.ConnectDB()
-	authMiddleware := middleware.AuthMiddleware()
-	// Маршруты для Auth
-	AuthRoutes.Urls(router, authMiddleware)
-	// Маршруты для main
-	MainRoutes.Urls(router, authMiddleware)
-	// Маршруты для Admin
-	AdminRoutes.Urls(router, authMiddleware)
-	// Маршруты для Api
-	ApiRoutes.Urls(router, authMiddleware)
+	r.Use(sentrygin.New(sentrygin.Options{}))
 
-	// Статика
-	router.Static("/assets", "./assets")
-	//route.StaticFS("/more_static", http.Dir("my_file_system"))
-	router.StaticFile("/favicon.ico", "./assets/img/favicon.ico")
+	template.AddComp(chartjs.NewChart())
 
-	router.GET("/send", func(context *gin.Context) {
-		MainControllers.SendEmail("user1@example.com", "20100", "password.msg")
-		context.JSON(http.StatusOK, gin.H{"user1@example.com": "OK"})
+	eng := engine.Default()
+
+	if err := eng.AddConfigFromJSON("./config.json").
+		AddGenerators(tables.Generators).
+		Use(r); err != nil {
+		panic(err)
+	}
+
+	r.Static("/uploads", "./uploads")
+
+	eng.HTML("GET", "/admin", pages.GetDashBoard)
+	eng.HTMLFile("GET", "/admin/hello", ".admin/html/hello.tmpl", map[string]interface{}{
+		"msg": "Hello world",
 	})
 
-	// Запуск сервера
-	port := "8081"
-	router.Run(":" + port)
+	models.Init(eng.PostgresqlConnection())
+
+	_ = r.Run(":80")
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	log.Print("closing database connection")
+	eng.PostgresqlConnection().Close()
 }

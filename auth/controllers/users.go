@@ -4,8 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"main/auth/models"
 	"net/http"
-
-	MainModels "main/models"
 )
 
 type CreateUserInput struct {
@@ -49,7 +47,7 @@ func CreateUser(context *gin.Context) {
 		IsStaff:      input.IsStaff,
 		IsActive:     input.IsActive,
 	}
-	MainModels.DB.Create(&user)
+	//MainModels.DB.Create(&user)
 
 	context.JSON(http.StatusOK, gin.H{"users": user})
 }

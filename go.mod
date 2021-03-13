@@ -3,23 +3,22 @@ module main
 go 1.16
 
 require (
-	github.com/GoAdminGroup/go-admin v1.2.22 // indirect
+	github.com/GoAdminGroup/go-admin v1.2.22
+	github.com/GoAdminGroup/themes v0.0.42
 	github.com/appleboy/gin-jwt/v2 v2.6.4
-	github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21 // indirect
-	github.com/foolin/gin-template v0.0.0-20190415034731-41efedfb393b
+	github.com/buaazp/fasthttprouter v0.1.1 // indirect
+	github.com/gavv/httpexpect v2.0.0+incompatible
 	github.com/getsentry/sentry-go v0.10.0
 	github.com/gin-gonic/gin v1.6.3
-	github.com/go-playground/validator/v10 v10.4.1 // indirect
-	github.com/golang/protobuf v1.4.3
+	github.com/gobuffalo/packr/v2 v2.8.1 // indirect
+	github.com/golang/protobuf v1.3.3
+	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/jinzhu/gorm v1.9.16
 	github.com/joho/godotenv v1.3.0
-	github.com/json-iterator/go v1.1.10 // indirect
-	github.com/leodido/go-urn v1.2.1 // indirect
-	github.com/ugorji/go v1.2.4 // indirect
-	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 // indirect
-	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
-	golang.org/x/sys v0.0.0-20210223212115-eede4237b368 // indirect
-	google.golang.org/grpc v1.36.0
-	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gorm.io/driver/postgres v1.0.8
-	gorm.io/gorm v1.20.12
+	github.com/sclevine/agouti v3.0.0+incompatible // indirect
+	github.com/sergi/go-diff v1.1.0 // indirect
+	github.com/valyala/fasthttp v1.22.0 // indirect
+	google.golang.org/grpc v1.21.0
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
+	gorm.io/gorm v1.21.3
 )
