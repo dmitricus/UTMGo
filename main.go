@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/GoAdminGroup/go-admin/modules/language"
 	"io/ioutil"
 	"log"
 	"os"
@@ -23,10 +22,8 @@ import (
 
 	"main/admin/models"
 
-	ru_language "main/admin/language"
-	"main/admin/tables"
-
 	AdminRoutes "main/admin/routes"
+	"main/admin/tables"
 	ApiRoutes "main/api/routers"
 	AuthRoutes "main/auth/routers"
 )
@@ -57,7 +54,6 @@ func startServer() {
 		Use(r); err != nil {
 		panic(err)
 	}
-	language.AppendTo("ru", ru_language.RU)
 	r.Static("/uploads", "./uploads")
 
 	authMiddleware := middleware.AuthMiddleware()

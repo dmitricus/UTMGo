@@ -1,4 +1,4 @@
-package language
+package locale
 
 import (
 	"golang.org/x/text/language"
