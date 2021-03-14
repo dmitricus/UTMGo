@@ -1,20 +1,13 @@
-// Copyright 2019 GoAdmin Core Team. All rights reserved.
-// Use of this source code is governed by a Apache-2.0 style
-// license that can be found in the LICENSE file.
-
 package language
 
 import (
-	"github.com/GoAdminGroup/go-admin/modules/language"
-	language_text "golang.org/x/text/language"
+	"golang.org/x/text/language"
 	"strings"
 )
 
-var (
-	RU = language_text.Russian.String()
-)
+type LangSet map[string]string
 
-var ru = language.LangSet{
+var RU = LangSet{
 	"managers":         "Менеджеры",
 	"name":             "Имя",
 	"nickname":         "Прозвище",
@@ -226,11 +219,11 @@ var ru = language.LangSet{
 	"config.do not modify when you have not set up all assets": "Do not modify when you have not set up all assets",
 	"config.it will work when theme is adminlte":               "It will work when theme is adminlte",
 
-	"config.language." + language.CN:                  "Chinese",
-	"config.language." + language.EN:                  "English",
-	"config.language." + language.JP:                  "Japanese",
-	"config.language." + strings.ToLower(language.TC): "Traditional Chinese",
-	"config.language." + RU:                           "Русский",
+	"config.language." + language.Chinese.String():                             "Chinese",
+	"config.language." + language.English.String():                             "English",
+	"config.language." + language.Japanese.String():                            "Japanese",
+	"config.language." + strings.ToLower(language.TraditionalChinese.String()): "Traditional Chinese",
+	"config.language." + language.Russian.String():                             "Русский",
 
 	"config.modify site config":         "Site Configuration Modification",
 	"config.modify site config success": "modified success",

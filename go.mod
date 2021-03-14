@@ -18,6 +18,7 @@ require (
 	github.com/sclevine/agouti v3.0.0+incompatible // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/valyala/fasthttp v1.22.0 // indirect
+	golang.org/x/text v0.3.5 // indirect
 	google.golang.org/grpc v1.21.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gorm.io/gorm v1.21.3
