@@ -66,7 +66,7 @@ func startServer() {
 
 	models.Init(eng.PostgresqlConnection())
 
-	_ = r.Run(":8080")
+	_ = r.Run(":8081")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)

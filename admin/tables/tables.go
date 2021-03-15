@@ -17,5 +17,7 @@ import (
 // example end
 //
 var Generators = map[string]table.Generator{
-	"email_server": GetEmailServersTable,
+	"email_servers": GetEmailServersTable,
+	"domains":       GetDomainsTable,
+	"emails":        GetEmailsTable,
 }

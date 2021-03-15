@@ -9,7 +9,7 @@ type EmailServers struct {
 	EmailPassword     string    `json:"email_password"`                                                    // Пароль
 	EmailUseSSL       bool      `json:"email_use_ssl"`                                                     // Использовать SSL
 	EmailUseTLS       bool      `json:"email_use_tls"`                                                     // Использовать TLS
-	EmailFailSilently string    `json:"email_fail_silently"`                                               // Тихое подавление ошибок
+	EmailFailSilently bool      `json:"email_fail_silently"`                                               // Тихое подавление ошибок
 	EmailTimeout      int32     `json:"email_timeout"`                                                     // Тайм-аут
 	EmailSSLCertFile  string    `json:"email_ssl_cert_file" gorm:filepat`                                  // Сертификат EmailServers/certfile/%Y/%m/%d
 	EmailSSLKeyfile   string    `json:"email_ssl_key_file"`                                                // Файл ключа EmailServers/keyfile/%Y/%m/%d

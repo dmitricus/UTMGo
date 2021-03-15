@@ -19,5 +19,8 @@ func Init(c db.Connection) {
 	}
 	orm.AutoMigrate(
 		&models.EmailServers{},
+		&models.Domains{},
+		&models.Bounced{},
+		&models.Emails{},
 	)
 }
