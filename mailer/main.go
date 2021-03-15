@@ -6,12 +6,12 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/joho/godotenv"
 	"log"
 	"net"
 	"net/smtp"
-	"os"
 	"text/template"
+
+	MailerModels "main/mailer/models"
 
 	"google.golang.org/grpc/reflection"
 
@@ -49,23 +49,36 @@ func (c *conf) notEmpty() (ie bool) {
 var cnf conf               //variable holds configuration struct
 var tpl *template.Template //... holds templates
 var queue chan Message     //... queue for the messages received from RPC
+var emailServer MailerModels.EmailServers
 
 //At init() we are reading configuration from the environment variables
 //then reading templates
 //then creating queue channel
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	MailerModels.ConnectDB()
+	MailerModels.ORM.First(&emailServer, "is_active = ?", true)
+
 	cnf = conf{
-		os.Getenv("MAILER_REMOTE_HOST"),
-		os.Getenv("MAILER_USER"),
-		os.Getenv("MAILER_PASSWORD"),
-		os.Getenv("MAILER_FROM"),
-		os.Getenv("MAILER_SERVICENAME"),
-		os.Getenv("MAILER_SERVING_AT"),
+		emailServer.EmailHost,
+		emailServer.EmailUsername,
+		emailServer.EmailPassword,
+		emailServer.EmailDefaultFrom,
+		"mailer",
+		"50100",
 	}
+
+	//err := godotenv.Load()
+	//if err != nil {
+	//	log.Fatal("Error loading .env file")
+	//}
+	//cnf = conf{
+	//	os.Getenv("MAILER_REMOTE_HOST"),
+	//	os.Getenv("MAILER_USER"),
+	//	os.Getenv("MAILER_PASSWORD"),
+	//	os.Getenv("MAILER_FROM"),
+	//	os.Getenv("MAILER_SERVICENAME"),
+	//	os.Getenv("MAILER_SERVING_AT"),
+	//}
 	if !cnf.notEmpty() {
 		cnf.pass = "**********"
 		log.Fatal("Envs not set", cnf)

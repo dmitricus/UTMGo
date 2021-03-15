@@ -21,5 +21,6 @@ require (
 	golang.org/x/text v0.3.5
 	google.golang.org/grpc v1.21.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
+	gorm.io/driver/postgres v1.0.8
 	gorm.io/gorm v1.21.3
 )
