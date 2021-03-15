@@ -1,4 +1,4 @@
-FROM scratch
-ADD main /
-CMD ["/main"]
-EXPOSE 8080
+FROM golang:latest
+
+WORKDIR /go/src/app
+COPY . .
