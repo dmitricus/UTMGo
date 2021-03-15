@@ -59,12 +59,12 @@ func init() {
 	MailerModels.ORM.First(&emailServer, "is_active = ?", true)
 
 	cnf = conf{
-		emailServer.EmailHost,
+		emailServer.EmailHost + ":" + string(emailServer.EmailPort),
 		emailServer.EmailUsername,
 		emailServer.EmailPassword,
 		emailServer.EmailDefaultFrom,
 		"mailer",
-		"50100",
+		"0.0.0.0:20100",
 	}
 
 	//err := godotenv.Load()
@@ -79,10 +79,10 @@ func init() {
 	//	os.Getenv("MAILER_SERVICENAME"),
 	//	os.Getenv("MAILER_SERVING_AT"),
 	//}
-	if !cnf.notEmpty() {
-		cnf.pass = "**********"
-		log.Fatal("Envs not set", cnf)
-	}
+	//if !cnf.notEmpty() {
+	//	cnf.pass = "**********"
+	//	log.Fatal("Envs not set", cnf)
+	//}
 	tpl = template.Must(template.New("").ParseGlob("templates/mail/*.msg"))
 
 	queue = make(chan Message, 10) //set length of the messages queue here
@@ -184,30 +184,42 @@ func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 
 //Function to get active tls connection and smtp client
 func getSMTPClient() (*smtp.Client, smtp.Auth) {
-	var err error
-	host, _, _ := net.SplitHostPort(cnf.smtphost)
-
-	tlsconfig := &tls.Config{
-		//InsecureSkipVerify: true,
-		ServerName: host,
-	}
-	conn, err := net.Dial("tcp", cnf.smtphost)
+	var (
+		auth   smtp.Auth
+		client *smtp.Client
+	)
+	host, port, err := net.SplitHostPort(cnf.smtphost)
 	if err != nil {
-		log.Println("ERROR:", err)
+		log.Printf("Invalid address: %s\n", err)
 	}
 
-	c, err := smtp.NewClient(conn, host)
-	if err != nil {
-		log.Println("ERROR:", err)
+	if emailServer.EmailUseSSL {
+		tlsCon, err := tls.Dial("tcp", fmt.Sprintf("%v:%v", host, port), &tls.Config{ServerName: host})
+		if err != nil {
+			log.Println("ERROR:", err)
+		}
+		client, err = smtp.NewClient(tlsCon, host)
+	} else if emailServer.EmailUseTLS {
+		client, err = smtp.Dial(fmt.Sprintf("%v:%v", host, port))
+		if err != nil {
+			log.Println("ERROR:", err)
+		}
+		if ok, _ := client.Extension("STARTTLS"); ok {
+			config := &tls.Config{ServerName: host}
+			if err = client.StartTLS(config); err != nil {
+				log.Println("ERROR:", err)
+			}
+		}
+
+	} else {
+		client, err = smtp.Dial(fmt.Sprintf("%v:%v", host, port))
+		if err != nil {
+			log.Println("ERROR:", err)
+		}
 	}
 
-	if err = c.StartTLS(tlsconfig); err != nil {
-		log.Println("ERROR:", err)
-	}
-
-	auth := LoginAuth(cnf.user, cnf.pass)
-
-	return c, auth
+	auth = smtp.PlainAuth("", cnf.user, cnf.pass, cnf.smtphost)
+	return client, auth
 }
 
 //Main loop to send a batch of emails due to one smtp session
