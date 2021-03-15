@@ -3,12 +3,12 @@ package main
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
-	"errors"
 	"fmt"
+	gosasl "github.com/emersion/go-sasl"
+	gosmtp "github.com/emersion/go-smtp"
 	"log"
 	"net"
-	"net/smtp"
+	"strings"
 	"text/template"
 
 	MailerModels "main/mailer/models"
@@ -59,30 +59,13 @@ func init() {
 	MailerModels.ORM.First(&emailServer, "is_active = ?", true)
 
 	cnf = conf{
-		emailServer.EmailHost + ":" + string(emailServer.EmailPort),
+		fmt.Sprintf("%s:%d", emailServer.EmailHost, emailServer.EmailPort),
 		emailServer.EmailUsername,
 		emailServer.EmailPassword,
 		emailServer.EmailDefaultFrom,
 		"mailer",
 		"0.0.0.0:20100",
 	}
-
-	//err := godotenv.Load()
-	//if err != nil {
-	//	log.Fatal("Error loading .env file")
-	//}
-	//cnf = conf{
-	//	os.Getenv("MAILER_REMOTE_HOST"),
-	//	os.Getenv("MAILER_USER"),
-	//	os.Getenv("MAILER_PASSWORD"),
-	//	os.Getenv("MAILER_FROM"),
-	//	os.Getenv("MAILER_SERVICENAME"),
-	//	os.Getenv("MAILER_SERVING_AT"),
-	//}
-	//if !cnf.notEmpty() {
-	//	cnf.pass = "**********"
-	//	log.Fatal("Envs not set", cnf)
-	//}
 	tpl = template.Must(template.New("").ParseGlob("templates/mail/*.msg"))
 
 	queue = make(chan Message, 10) //set length of the messages queue here
@@ -134,7 +117,6 @@ func (s *server) RetrievePass(ctx context.Context, in *pb.MsgRequest) (*pb.MsgRe
 }
 
 func main() {
-
 	go messageLoop() //start handling messages from the queue and send emails
 
 	//firing up gRPC server
@@ -156,91 +138,15 @@ func main() {
 
 }
 
-type loginAuth struct {
-	username, password string
-}
-
-func LoginAuth(username, password string) smtp.Auth {
-	return &loginAuth{username, password}
-}
-
-func (a *loginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
-	return "LOGIN", []byte(a.username), nil
-}
-
-func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
-	if more {
-		switch string(fromServer) {
-		case "Username:":
-			return []byte(a.username), nil
-		case "Password:":
-			return []byte(a.password), nil
-		default:
-			return nil, errors.New("Unknown from server")
-		}
-	}
-	return nil, nil
-}
-
-//Function to get active tls connection and smtp client
-func getSMTPClient() (*smtp.Client, smtp.Auth) {
-	var (
-		auth   smtp.Auth
-		client *smtp.Client
-	)
-	host, port, err := net.SplitHostPort(cnf.smtphost)
-	if err != nil {
-		log.Printf("Invalid address: %s\n", err)
-	}
-
-	if emailServer.EmailUseSSL {
-		tlsCon, err := tls.Dial("tcp", fmt.Sprintf("%v:%v", host, port), &tls.Config{ServerName: host})
-		if err != nil {
-			log.Println("ERROR:", err)
-		}
-		client, err = smtp.NewClient(tlsCon, host)
-	} else if emailServer.EmailUseTLS {
-		client, err = smtp.Dial(fmt.Sprintf("%v:%v", host, port))
-		if err != nil {
-			log.Println("ERROR:", err)
-		}
-		if ok, _ := client.Extension("STARTTLS"); ok {
-			config := &tls.Config{ServerName: host}
-			if err = client.StartTLS(config); err != nil {
-				log.Println("ERROR:", err)
-			}
-		}
-
-	} else {
-		client, err = smtp.Dial(fmt.Sprintf("%v:%v", host, port))
-		if err != nil {
-			log.Println("ERROR:", err)
-		}
-	}
-
-	auth = smtp.PlainAuth("", cnf.user, cnf.pass, cnf.smtphost)
-	return client, auth
-}
-
 //Main loop to send a batch of emails due to one smtp session
 func messageLoop() {
-	client, auth := getSMTPClient()
-	defer client.Quit()
-
 	for m := range queue {
-
-		err := client.Noop()
-		if err != nil {
-			log.Println("ERROR: reestablish connection", err)
-		}
+		auth := gosasl.NewPlainClient("", cnf.user, cnf.pass)
+		// Connect to the server, authenticate, set the sender and recipient,
+		// and send the email all in one step.
 		to := []string{m.To}
-		err = smtp.SendMail(
-			cnf.smtphost,
-			auth,
-			m.From,
-			to,
-			m.getMailBody(),
-		)
+		msg := strings.NewReader(string(m.getMailBody()))
+		err := gosmtp.SendMail(cnf.smtphost, auth, m.From, to, msg)
 		if err != nil {
 			log.Fatal("ERROR:", err)
 		}

@@ -7,6 +7,8 @@ require (
 	github.com/GoAdminGroup/themes v0.0.42
 	github.com/appleboy/gin-jwt/v2 v2.6.4
 	github.com/buaazp/fasthttprouter v0.1.1 // indirect
+	github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21 // indirect
+	github.com/emersion/go-smtp v0.14.0 // indirect
 	github.com/gavv/httpexpect v2.0.0+incompatible
 	github.com/getsentry/sentry-go v0.10.0
 	github.com/gin-gonic/gin v1.6.3
