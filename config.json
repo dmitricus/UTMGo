@@ -4,7 +4,7 @@
 			"host": "127.0.0.1",
 			"port": "5432",
 			"user": "postgres",
-			"pwd": "167a214b59",
+			"pwd": "root",
 			"name": "utmgo",
 			"max_idle_con": 5,
 			"max_open_con": 10,

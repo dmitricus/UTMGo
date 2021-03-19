@@ -3,15 +3,16 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	gosasl "github.com/emersion/go-sasl"
 	gosmtp "github.com/emersion/go-smtp"
 	"log"
+	MailerModels "main/mailer/models"
 	"net"
+	"net/smtp"
 	"strings"
 	"text/template"
-
-	MailerModels "main/mailer/models"
 
 	"google.golang.org/grpc/reflection"
 
@@ -138,17 +139,89 @@ func main() {
 
 }
 
+func SendMailMessage(m *Message) {
+	var (
+		conn    net.Conn
+		conntls *tls.Conn
+		cli     *smtp.Client
+	)
+	defer func() {
+		if cli != nil {
+			cli.Close()
+		}
+		if conntls != nil {
+			conntls.Close()
+		}
+		if conn != nil {
+			conn.Close()
+		}
+	}()
+
+	conn, err := net.Dial("tcp", cnf.smtphost)
+	if err != nil {
+		log.Fatal("ERROR 1:", err)
+	}
+
+	sslConfig := &tls.Config{InsecureSkipVerify: true}
+	if emailServer.EmailUseSSL {
+		conntls = tls.Client(conn, sslConfig)
+		if err = conntls.Handshake(); err != nil {
+			log.Fatal("ERROR 2:", err)
+		}
+		cli, err = smtp.NewClient(conntls, cnf.smtphost)
+	} else {
+		cli, err = smtp.NewClient(conn, cnf.smtphost)
+		if err == nil {
+			if ok, _ := cli.Extension("STLS"); ok {
+				err = cli.StartTLS(sslConfig)
+			}
+		}
+	}
+	if err != nil {
+		log.Fatal("ERROR 3:", err)
+	}
+	auth := smtp.PlainAuth("", cnf.user, cnf.pass, cnf.smtphost)
+	if err = cli.Auth(auth); err != nil {
+		log.Fatal("ERROR 4:", err)
+	}
+	if err = cli.Mail(m.From); err != nil {
+		log.Fatal("ERROR 5:", err)
+	}
+	if err = cli.Rcpt(m.To); err != nil {
+		log.Fatal("ERROR 6:", err)
+	}
+	wrt, err := cli.Data()
+	if err != nil {
+		log.Fatal("ERROR 7:", err)
+	}
+	wrt.Write(m.getMailBody())
+	wrt.Close()
+	if err = cli.Quit(); err != nil {
+		log.Fatal("ERROR 8:", err)
+	}
+	log.Printf("Письмо отправлено")
+}
+
+func SendMailSSL(m *Message) {
+	auth := gosasl.NewPlainClient("", cnf.user, cnf.pass)
+	// Connect to the server, authenticate, set the sender and recipient,
+	// and send the email all in one step.
+	to := []string{m.To}
+	msg := strings.NewReader(string(m.getMailBody()))
+	err := gosmtp.SendMail(cnf.smtphost, auth, m.From, to, msg)
+	if err != nil {
+		log.Fatal("ERROR:", err)
+	}
+	log.Printf("Письмо отправлено")
+}
+
 //Main loop to send a batch of emails due to one smtp session
 func messageLoop() {
 	for m := range queue {
-		auth := gosasl.NewPlainClient("", cnf.user, cnf.pass)
-		// Connect to the server, authenticate, set the sender and recipient,
-		// and send the email all in one step.
-		to := []string{m.To}
-		msg := strings.NewReader(string(m.getMailBody()))
-		err := gosmtp.SendMail(cnf.smtphost, auth, m.From, to, msg)
-		if err != nil {
-			log.Fatal("ERROR:", err)
+		if emailServer.EmailUseSSL {
+			SendMailSSL(&m)
+		} else {
+			SendMailMessage(&m)
 		}
 	}
 }

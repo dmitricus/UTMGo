@@ -11,7 +11,7 @@ func ConnectDB() {
 	db, err := gorm.Open(
 		postgres.New(
 			postgres.Config{
-				DSN:                  "host=127.0.0.1 port=5432 user=postgres dbname=utmgo password=167a214b59 sslmode=disable",
+				DSN:                  "host=127.0.0.1 port=5432 user=postgres dbname=utmgo password=root sslmode=disable",
 				PreferSimpleProtocol: true,
 			}),
 		&gorm.Config{},
