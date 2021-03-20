@@ -92,7 +92,7 @@ type server struct {
 }
 
 func (s *server) SendPass(ctx context.Context, in *pb.MsgRequest) (*pb.MsgReply, error) {
-	m := Message{From: fmt.Sprintf("%s <%s>", cnf.servicename, cnf.from), To: in.To, Code: in.Code, tplname: passtpl}
+	m := Message{From: fmt.Sprintf("%s", cnf.from), To: in.To, Code: in.Code, tplname: passtpl}
 	log.Printf("sendpass to: %s", in.To)
 	//queue channel to be used in non-blocking style
 	//if queue is full method replies to the client with false
@@ -106,7 +106,7 @@ func (s *server) SendPass(ctx context.Context, in *pb.MsgRequest) (*pb.MsgReply,
 }
 
 func (s *server) RetrievePass(ctx context.Context, in *pb.MsgRequest) (*pb.MsgReply, error) {
-	m := Message{From: fmt.Sprintf("%s <%s>", cnf.servicename, cnf.from), To: in.To, Code: in.Code, tplname: retrievetpl}
+	m := Message{From: fmt.Sprintf("%s", cnf.from), To: in.To, Code: in.Code, tplname: retrievetpl}
 	log.Printf("retrievepass to: %s", in.To)
 	select {
 	case queue <- m:
@@ -159,20 +159,20 @@ func SendMailMessage(m *Message) {
 
 	conn, err := net.Dial("tcp", cnf.smtphost)
 	if err != nil {
-		log.Fatal("ERROR 1:", err)
+		log.Printf("ERROR 1:", err)
 	}
 
 	sslConfig := &tls.Config{InsecureSkipVerify: true}
-	if emailServer.EmailUseSSL {
+	if emailServer.EmailUseTLS {
 		conntls = tls.Client(conn, sslConfig)
 		if err = conntls.Handshake(); err != nil {
-			log.Fatal("ERROR 2:", err)
+			log.Printf("ERROR 2:", err)
 		}
 		cli, err = smtp.NewClient(conntls, cnf.smtphost)
 	} else {
 		cli, err = smtp.NewClient(conn, cnf.smtphost)
 		if err == nil {
-			if ok, _ := cli.Extension("STLS"); ok {
+			if ok, _ := cli.Extension("STARTTLS"); ok {
 				err = cli.StartTLS(sslConfig)
 			}
 		}
@@ -218,6 +218,7 @@ func SendMailSSL(m *Message) {
 //Main loop to send a batch of emails due to one smtp session
 func messageLoop() {
 	for m := range queue {
+		log.Printf("Queue %s", m)
 		if emailServer.EmailUseSSL {
 			SendMailSSL(&m)
 		} else {
