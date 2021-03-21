@@ -7,14 +7,13 @@ import (
 	"fmt"
 	gosasl "github.com/emersion/go-sasl"
 	gosmtp "github.com/emersion/go-smtp"
+	"google.golang.org/grpc/reflection"
 	"log"
 	MailerModels "main/mailer/models"
 	"net"
 	"net/smtp"
 	"strings"
 	"text/template"
-
-	"google.golang.org/grpc/reflection"
 
 	"google.golang.org/grpc"
 	pb "main/mailer/mailerpkg"
@@ -51,6 +50,15 @@ var cnf conf               //variable holds configuration struct
 var tpl *template.Template //... holds templates
 var queue chan Message     //... queue for the messages received from RPC
 var emailServer MailerModels.EmailServers
+
+var (
+	buf    bytes.Buffer
+	logger = log.New(&buf, "ERROR: ", log.Lshortfile)
+
+	errof = func(info string) {
+		logger.Output(2, info)
+	}
+)
 
 //At init() we are reading configuration from the environment variables
 //then reading templates
@@ -139,7 +147,7 @@ func main() {
 
 }
 
-func SendMailMessage(m *Message) {
+func SendMailMessage(m *Message) error {
 	var (
 		conn    net.Conn
 		conntls *tls.Conn
@@ -159,14 +167,14 @@ func SendMailMessage(m *Message) {
 
 	conn, err := net.Dial("tcp", cnf.smtphost)
 	if err != nil {
-		log.Printf("ERROR 1:", err)
+		return err
 	}
 
 	sslConfig := &tls.Config{InsecureSkipVerify: true}
 	if emailServer.EmailUseTLS {
 		conntls = tls.Client(conn, sslConfig)
 		if err = conntls.Handshake(); err != nil {
-			log.Printf("ERROR 2:", err)
+			return err
 		}
 		cli, err = smtp.NewClient(conntls, cnf.smtphost)
 	} else {
@@ -178,31 +186,31 @@ func SendMailMessage(m *Message) {
 		}
 	}
 	if err != nil {
-		log.Fatal("ERROR 3:", err)
+		return err
 	}
 	auth := smtp.PlainAuth("", cnf.user, cnf.pass, cnf.smtphost)
 	if err = cli.Auth(auth); err != nil {
-		log.Fatal("ERROR 4:", err)
+		return err
 	}
 	if err = cli.Mail(m.From); err != nil {
-		log.Fatal("ERROR 5:", err)
+		return err
 	}
 	if err = cli.Rcpt(m.To); err != nil {
-		log.Fatal("ERROR 6:", err)
+		return err
 	}
 	wrt, err := cli.Data()
 	if err != nil {
-		log.Fatal("ERROR 7:", err)
+		return err
 	}
 	wrt.Write(m.getMailBody())
 	wrt.Close()
 	if err = cli.Quit(); err != nil {
-		log.Fatal("ERROR 8:", err)
+		return err
 	}
-	log.Printf("Письмо отправлено")
+	return nil
 }
 
-func SendMailSSL(m *Message) {
+func SendMailSSL(m *Message) error {
 	auth := gosasl.NewPlainClient("", cnf.user, cnf.pass)
 	// Connect to the server, authenticate, set the sender and recipient,
 	// and send the email all in one step.
@@ -210,9 +218,9 @@ func SendMailSSL(m *Message) {
 	msg := strings.NewReader(string(m.getMailBody()))
 	err := gosmtp.SendMail(cnf.smtphost, auth, m.From, to, msg)
 	if err != nil {
-		log.Fatal("ERROR:", err)
+		return err
 	}
-	log.Printf("Письмо отправлено")
+	return nil
 }
 
 //Main loop to send a batch of emails due to one smtp session
@@ -220,9 +228,19 @@ func messageLoop() {
 	for m := range queue {
 		log.Printf("Queue %s", m)
 		if emailServer.EmailUseSSL {
-			SendMailSSL(&m)
+			if err := SendMailSSL(&m); err != nil {
+				errof(fmt.Sprintf("error occurred at: %v", err))
+				fmt.Print(&buf)
+			} else {
+				log.Printf("Письмо отправлено")
+			}
 		} else {
-			SendMailMessage(&m)
+			if err := SendMailMessage(&m); err != nil {
+				errof(fmt.Sprintf("%v", err))
+				fmt.Print(&buf)
+			} else {
+				log.Printf("Письмо отправлено")
+			}
 		}
 	}
 }
