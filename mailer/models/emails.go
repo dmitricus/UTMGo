@@ -12,7 +12,7 @@ type Emails struct {
 	Newsletter     string       `json:"newsletter"`
 	Status         string       `json:"status"`
 	StatusHash     string       `json:"status_hash"`
-	EmailServersID int          `json:"used_server"`
+	EmailServersID uint         `json:"used_server"`
 	UsedServer     EmailServers `gorm:"foreignKey:EmailServersID"`
 	EmailRemoteID  string       `json:"email_remote_id"`
 }

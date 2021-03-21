@@ -3,20 +3,21 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/md5"
 	"crypto/tls"
+	"encoding/hex"
 	"fmt"
 	gosasl "github.com/emersion/go-sasl"
 	gosmtp "github.com/emersion/go-smtp"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
+	pb "main/mailer/mailerpkg"
 	MailerModels "main/mailer/models"
 	"net"
 	"net/smtp"
 	"strings"
 	"text/template"
-
-	"google.golang.org/grpc"
-	pb "main/mailer/mailerpkg"
 )
 
 //Constants for available templates
@@ -147,6 +148,12 @@ func main() {
 
 }
 
+func GetMD5Hash(content []byte) string {
+	hasher := md5.New()
+	hasher.Write(content)
+	return hex.EncodeToString(hasher.Sum(nil))
+}
+
 func SendMailMessage(m *Message) error {
 	var (
 		conn    net.Conn
@@ -231,8 +238,21 @@ func messageLoop() {
 			if err := SendMailSSL(&m); err != nil {
 				errof(fmt.Sprintf("error occurred at: %v", err))
 				fmt.Print(&buf)
+				email := MailerModels.Emails{
+					Subject:        "",
+					Body:           "",
+					Sender:         "",
+					Recipient:      "",
+					Newsletter:     "",
+					Status:         "",
+					Type:           "",
+					EmailServersID: emailServer.ID,
+					StatusHash:     GetMD5Hash(m.getMailBody()),
+				}
+				MailerModels.ORM.Create(&email)
 			} else {
 				log.Printf("Письмо отправлено")
+
 			}
 		} else {
 			if err := SendMailMessage(&m); err != nil {
