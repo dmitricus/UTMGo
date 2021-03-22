@@ -1,7 +1,7 @@
 package models
 
 type EmailServers struct {
-	ID                uint      `json:"id" gorm:"primary_key"`                                             // ID
+	ID                int       `json:"id" gorm:"primary_key"`                                             // ID
 	EmailDefaultFrom  string    `json:"email_default_from"`                                                // FROM:
 	EmailHost         string    `json:"email_host"`                                                        // Хост
 	EmailPort         int32     `json:"email_port"`                                                        // Порт

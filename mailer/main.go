@@ -22,6 +22,7 @@ import (
 
 //Constants for available templates
 const (
+	infotpl     = "info.msg"
 	passtpl     = "password.msg"
 	retrievetpl = "retrieve.msg"
 )
@@ -101,7 +102,7 @@ type server struct {
 }
 
 func (s *server) SendInfo(ctx context.Context, in *pb.MsgRequest) (*pb.MsgReply, error) {
-	m := Message{Subject: in.Subject, Body: in.Body, From: fmt.Sprintf("%s", cnf.from), To: in.To, Code: in.Code, tplname: passtpl}
+	m := Message{Subject: in.Subject, Body: in.Body, From: fmt.Sprintf("%s", cnf.from), To: in.To, Code: in.Code, tplname: infotpl}
 	log.Printf("sendinfo to: %s", in.To)
 	//queue channel to be used in non-blocking style
 	//if queue is full method replies to the client with false
@@ -129,7 +130,7 @@ func (s *server) SendPass(ctx context.Context, in *pb.MsgRequest) (*pb.MsgReply,
 }
 
 func (s *server) RetrievePass(ctx context.Context, in *pb.MsgRequest) (*pb.MsgReply, error) {
-	m := Message{Subject: in.Subject, Body: in.Body, From: fmt.Sprintf("%s", cnf.from), To: in.To, Code: in.Code, tplname: passtpl}
+	m := Message{Subject: in.Subject, Body: in.Body, From: fmt.Sprintf("%s", cnf.from), To: in.To, Code: in.Code, tplname: retrievetpl}
 	log.Printf("retrievepass to: %s", in.To)
 	select {
 	case queue <- m:
@@ -254,7 +255,7 @@ func messageLoop() {
 				fmt.Print(&buf)
 				email := MailerModels.Emails{
 					Subject:        m.Subject,
-					Body:           string(m.getMailBody()),
+					Body:           m.Body,
 					Sender:         m.From,
 					Recipient:      m.To,
 					Newsletter:     "",
@@ -268,7 +269,7 @@ func messageLoop() {
 				log.Printf("Письмо отправлено")
 				email := MailerModels.Emails{
 					Subject:        m.Subject,
-					Body:           string(m.getMailBody()),
+					Body:           m.Body,
 					Sender:         m.From,
 					Recipient:      m.To,
 					Newsletter:     "",
@@ -285,7 +286,7 @@ func messageLoop() {
 				fmt.Print(&buf)
 				email := MailerModels.Emails{
 					Subject:        m.Subject,
-					Body:           string(m.getMailBody()),
+					Body:           m.Body,
 					Sender:         m.From,
 					Recipient:      m.To,
 					Newsletter:     "",
@@ -299,7 +300,7 @@ func messageLoop() {
 				log.Printf("Письмо отправлено")
 				email := MailerModels.Emails{
 					Subject:        m.Subject,
-					Body:           string(m.getMailBody()),
+					Body:           m.Body,
 					Sender:         m.From,
 					Recipient:      m.To,
 					Newsletter:     "",
