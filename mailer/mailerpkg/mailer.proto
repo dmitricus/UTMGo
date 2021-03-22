@@ -1,13 +1,16 @@
 syntax = "proto3";
 
 service Mailer {
+  rpc SendInfo(MsgRequest) returns (MsgReply) {}
   rpc SendPass(MsgRequest) returns (MsgReply) {}
   rpc RetrievePass(MsgRequest) returns (MsgReply) {}
 }
 
 message MsgRequest {
-  string to = 1;
-  string code = 2;
+  string subject = 1;
+  string body = 2;
+  string to = 3;
+  string code = 4;
 }
 
 message MsgReply {

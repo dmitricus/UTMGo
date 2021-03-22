@@ -33,8 +33,10 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type MsgRequest struct {
-	To   string `protobuf:"bytes,1,opt,name=to" json:"to,omitempty"`
-	Code string `protobuf:"bytes,2,opt,name=code" json:"code,omitempty"`
+	Subject string `protobuf:"bytes,1,opt,name=subject" json:"subject,omitempty"`
+	Body    string `protobuf:"bytes,1,opt,name=body" json:"body,omitempty"`
+	To      string `protobuf:"bytes,1,opt,name=to" json:"to,omitempty"`
+	Code    string `protobuf:"bytes,2,opt,name=code" json:"code,omitempty"`
 }
 
 func (m *MsgRequest) Reset()                    { *m = MsgRequest{} }
@@ -88,6 +90,7 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Mailer service
 
 type MailerClient interface {
+	SendInfo(ctx context.Context, in *MsgRequest, opts ...grpc.CallOption) (*MsgReply, error)
 	SendPass(ctx context.Context, in *MsgRequest, opts ...grpc.CallOption) (*MsgReply, error)
 	RetrievePass(ctx context.Context, in *MsgRequest, opts ...grpc.CallOption) (*MsgReply, error)
 }
@@ -98,6 +101,15 @@ type mailerClient struct {
 
 func NewMailerClient(cc *grpc.ClientConn) MailerClient {
 	return &mailerClient{cc}
+}
+
+func (c *mailerClient) SendInfo(ctx context.Context, in *MsgRequest, opts ...grpc.CallOption) (*MsgReply, error) {
+	out := new(MsgReply)
+	err := grpc.Invoke(ctx, "/Mailer/SendInfo", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *mailerClient) SendPass(ctx context.Context, in *MsgRequest, opts ...grpc.CallOption) (*MsgReply, error) {
@@ -121,12 +133,31 @@ func (c *mailerClient) RetrievePass(ctx context.Context, in *MsgRequest, opts ..
 // Server API for Mailer service
 
 type MailerServer interface {
+	SendInfo(context.Context, *MsgRequest) (*MsgReply, error)
 	SendPass(context.Context, *MsgRequest) (*MsgReply, error)
 	RetrievePass(context.Context, *MsgRequest) (*MsgReply, error)
 }
 
 func RegisterMailerServer(s *grpc.Server, srv MailerServer) {
 	s.RegisterService(&_Mailer_serviceDesc, srv)
+}
+
+func _Mailer_SendInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MailerServer).SendPass(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Mailer/SendInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MailerServer).SendPass(ctx, req.(*MsgRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Mailer_SendPass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -169,6 +200,10 @@ var _Mailer_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "Mailer",
 	HandlerType: (*MailerServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "SendInfo",
+			Handler:    _Mailer_SendInfo_Handler,
+		},
 		{
 			MethodName: "SendPass",
 			Handler:    _Mailer_SendPass_Handler,

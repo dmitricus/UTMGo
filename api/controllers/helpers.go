@@ -72,7 +72,7 @@ func init() {
 //}
 
 // SendEmail
-func SendEmail(eml, code, tpl string) error {
+func SendEmail(eml, subject, body, code, tpl string) error {
 	conn, err := grpc.Dial(maileraddress, grpc.WithInsecure())
 	if err != nil {
 		return err
@@ -85,13 +85,18 @@ func SendEmail(eml, code, tpl string) error {
 	defer cancel()
 
 	switch tpl {
+	case "info.msg":
+		rply, err := c.SendInfo(ctx, &pb.MsgRequest{Subject: subject, Body: body, To: eml, Code: code})
+		if err != nil || rply.Sent == false {
+			return err
+		}
 	case "password.msg":
-		rply, err := c.SendPass(ctx, &pb.MsgRequest{To: eml, Code: code})
+		rply, err := c.SendPass(ctx, &pb.MsgRequest{Subject: subject, Body: body, To: eml, Code: code})
 		if err != nil || rply.Sent == false {
 			return err
 		}
 	case "retrieve.msg":
-		rply, err := c.RetrievePass(ctx, &pb.MsgRequest{To: eml, Code: code})
+		rply, err := c.RetrievePass(ctx, &pb.MsgRequest{Subject: subject, Body: body, To: eml, Code: code})
 		if err != nil || rply.Sent == false {
 			return err
 		}

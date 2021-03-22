@@ -3,4 +3,3 @@ To: {{.To}}
 Subject: {{.Subject}}
 
 {{.Body}}
-Your new password is {{.Code}}

@@ -83,7 +83,7 @@ func init() {
 
 //Message struct holds email data (GRPC SendPass and )
 type Message struct {
-	From, To, Code, tplname string
+	Subject, Body, From, To, Code, tplname string
 }
 
 //Method generates email body using appropriate template as a slice of bytes
@@ -100,8 +100,22 @@ func (m *Message) getMailBody() []byte {
 type server struct {
 }
 
+func (s *server) SendInfo(ctx context.Context, in *pb.MsgRequest) (*pb.MsgReply, error) {
+	m := Message{Subject: in.Subject, Body: in.Body, From: fmt.Sprintf("%s", cnf.from), To: in.To, Code: in.Code, tplname: passtpl}
+	log.Printf("sendinfo to: %s", in.To)
+	//queue channel to be used in non-blocking style
+	//if queue is full method replies to the client with false
+	select {
+	case queue <- m:
+	default:
+		return &pb.MsgReply{Sent: false}, nil
+	}
+
+	return &pb.MsgReply{Sent: true}, nil
+}
+
 func (s *server) SendPass(ctx context.Context, in *pb.MsgRequest) (*pb.MsgReply, error) {
-	m := Message{From: fmt.Sprintf("%s", cnf.from), To: in.To, Code: in.Code, tplname: passtpl}
+	m := Message{Subject: in.Subject, Body: in.Body, From: fmt.Sprintf("%s", cnf.from), To: in.To, Code: in.Code, tplname: passtpl}
 	log.Printf("sendpass to: %s", in.To)
 	//queue channel to be used in non-blocking style
 	//if queue is full method replies to the client with false
@@ -115,7 +129,7 @@ func (s *server) SendPass(ctx context.Context, in *pb.MsgRequest) (*pb.MsgReply,
 }
 
 func (s *server) RetrievePass(ctx context.Context, in *pb.MsgRequest) (*pb.MsgReply, error) {
-	m := Message{From: fmt.Sprintf("%s", cnf.from), To: in.To, Code: in.Code, tplname: retrievetpl}
+	m := Message{Subject: in.Subject, Body: in.Body, From: fmt.Sprintf("%s", cnf.from), To: in.To, Code: in.Code, tplname: passtpl}
 	log.Printf("retrievepass to: %s", in.To)
 	select {
 	case queue <- m:
@@ -239,27 +253,62 @@ func messageLoop() {
 				errof(fmt.Sprintf("error occurred at: %v", err))
 				fmt.Print(&buf)
 				email := MailerModels.Emails{
-					Subject:        "",
-					Body:           "",
-					Sender:         "",
-					Recipient:      "",
+					Subject:        m.Subject,
+					Body:           string(m.getMailBody()),
+					Sender:         m.From,
+					Recipient:      m.To,
 					Newsletter:     "",
-					Status:         "",
-					Type:           "",
+					Status:         fmt.Sprintf("error occurred at: %v", err),
+					Type:           "html",
 					EmailServersID: emailServer.ID,
 					StatusHash:     GetMD5Hash(m.getMailBody()),
 				}
 				MailerModels.ORM.Create(&email)
 			} else {
 				log.Printf("Письмо отправлено")
-
+				email := MailerModels.Emails{
+					Subject:        m.Subject,
+					Body:           string(m.getMailBody()),
+					Sender:         m.From,
+					Recipient:      m.To,
+					Newsletter:     "",
+					Status:         "sent to user",
+					Type:           "html",
+					EmailServersID: emailServer.ID,
+					StatusHash:     GetMD5Hash(m.getMailBody()),
+				}
+				MailerModels.ORM.Create(&email)
 			}
 		} else {
 			if err := SendMailMessage(&m); err != nil {
 				errof(fmt.Sprintf("%v", err))
 				fmt.Print(&buf)
+				email := MailerModels.Emails{
+					Subject:        m.Subject,
+					Body:           string(m.getMailBody()),
+					Sender:         m.From,
+					Recipient:      m.To,
+					Newsletter:     "",
+					Status:         fmt.Sprintf("error occurred at: %v", err),
+					Type:           "html",
+					EmailServersID: emailServer.ID,
+					StatusHash:     GetMD5Hash(m.getMailBody()),
+				}
+				MailerModels.ORM.Create(&email)
 			} else {
 				log.Printf("Письмо отправлено")
+				email := MailerModels.Emails{
+					Subject:        m.Subject,
+					Body:           string(m.getMailBody()),
+					Sender:         m.From,
+					Recipient:      m.To,
+					Newsletter:     "",
+					Status:         "sent to user",
+					Type:           "html",
+					EmailServersID: emailServer.ID,
+					StatusHash:     GetMD5Hash(m.getMailBody()),
+				}
+				MailerModels.ORM.Create(&email)
 			}
 		}
 	}
